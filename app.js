@@ -1,25 +1,35 @@
-const http = require("http");
-
-const dotenv = require('dotenv');
-dotenv.config();
-
-const fs = require("fs");
+//create an express server
+const express = require('express')
+const app = express()
 
 
-const server = http.createServer((request, response) => {
-    if (request.method == 'GET' && request.url == '7'){
-        const film = fs.readFileSync('./public/index.html','utf-8');
+//get the database from db.js
+const db = require('./db')
 
-        response.setHeader('Content-Type', 'text/html');
-        response.statusCode = 200;
+//Middlewares -- add before routers
+//==================================
+app.use(express.json()) //read json format data
 
-        response.end(film);
-    }else{
-        const film = fs.readFileSync('./public/404.html','utf-8');
+//Routers
+//==================================
 
-        response.setHeader('Content-Type', 'text/html');
-        response.statusCode = 404;
+app.get('/', async function ( req, res){
+    const menuCol = db.collection('menu')
 
-        response.end(film);
-    }
-}).listen(3000);
+    const dishesRef = await menuCol.get()
+
+    if (dishesRef.empty) return res.status(404).send('data not found')
+
+    const dishes = []
+
+    dishesRef.forEach((doc)=>{
+        dishes.push(doc.data())
+    })
+
+    res.statusCode = 200
+    res.json(dishes)
+})
+
+//start the server
+//==================================
+app.listen(3000, console.log("server running at http://127.0.0.1:3000"))
