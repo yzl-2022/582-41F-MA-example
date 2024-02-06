@@ -41,6 +41,14 @@ app.get('/', async function ( req, res){
     res.render('index',{ dishes:dishes })
 })
 
+app.get('/add', function(req, res){
+    res.render('add')
+})
+
+app.get('/login', function(req, res){
+    res.render('login')
+})
+
 //start the server
 //==================================
 app.listen(3000, console.log("server running at http://127.0.0.1:3000"))
