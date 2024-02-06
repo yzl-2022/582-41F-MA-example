@@ -2,6 +2,9 @@
 const express = require('express')
 const app = express()
 
+//to read the parameters in .env
+require('dotenv').config()
+
 //mustache -- templates
 //const mustache = require('mustache')
 const mustacheExpress = require('mustache-express')
