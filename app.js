@@ -2,7 +2,6 @@
 const express = require('express')
 const app = express()
 
-
 //get the database from db.js
 const db = require('./db')
 
@@ -27,7 +26,7 @@ app.get('/', async function ( req, res){
     })
 
     res.statusCode = 200
-    res.json(dishes)
+    res.json(dishes) // this is equals to res.send() and will terminate the response
 })
 
 //start the server
