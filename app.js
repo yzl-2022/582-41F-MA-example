@@ -2,12 +2,20 @@
 const express = require('express')
 const app = express()
 
+//mustache -- templates
+//const mustache = require('mustache')
+const mustacheExpress = require('mustache-express')
+
+app.set('views','./views')
+app.set('view engine', 'html');
+app.engine('html', mustacheExpress());
 
 //get the database from db.js
 const db = require('./db')
 
 //Middlewares -- add before routers
 //==================================
+app.use(express.static('./public'))
 app.use(express.json()) //read json format data
 
 //Routers
@@ -15,7 +23,6 @@ app.use(express.json()) //read json format data
 
 app.get('/', async function ( req, res){
     const menuCol = db.collection('menu')
-
     const dishesRef = await menuCol.get()
 
     if (dishesRef.empty) return res.status(404).send('data not found')
@@ -27,7 +34,11 @@ app.get('/', async function ( req, res){
     })
 
     res.statusCode = 200
-    res.json(dishes)
+
+    console.log(dishes)
+
+    //mustache
+    res.render('index',{ dishes:dishes })
 })
 
 //start the server

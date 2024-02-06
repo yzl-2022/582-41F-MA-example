@@ -1,0 +1,39 @@
+[
+    {
+      price: 3,
+      name: 'coffee',
+      ingredients: [ 'coffee' ],
+      category: 'drink'
+    },
+    {
+      name: 'sandwich ',
+      ingredients: [ 'wheat', 'tomato', 'ham' ],
+      category: 'main',
+      price: 7
+    },
+    {
+      price: 9,
+      name: 'pasta',
+      ingredients: [ 'wheat', 'source', 'cheese' ],
+      category: 'main'
+    },
+    {
+      name: 'pizza',
+      ingredients: [ 'wheat', 'source', 'cheese' ],
+      category: 'main',
+      price: 6
+    },
+    {
+      price: '5',
+      name: 'salade',
+      ingredients: [ 'tomato', 'cucumber', 'latus' ],
+      category: 'side'
+    },
+    {
+      price: '5',
+      name: 'fires',
+      ingredients: [ 'potato' ],
+      category: 'side'
+    },
+    { price: 3, name: 'coke', category: 'drink' }
+  ]
