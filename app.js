@@ -35,7 +35,7 @@ app.get('/', async function ( req, res){
 
     res.statusCode = 200
 
-    console.log(dishes)
+    //console.log(dishes)
 
     //mustache
     res.render('index',{ dishes:dishes })
