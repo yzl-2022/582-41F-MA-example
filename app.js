@@ -2,6 +2,13 @@
 const express = require('express')
 const app = express()
 
+//mustache -- templates
+const mustacheExpress = require('mustache-express')
+
+app.set('views','./views')
+app.set('view engine', 'html');
+app.engine('html', mustacheExpress());
+
 
 //get the database from db.js
 const db = require('./db')
@@ -29,6 +36,18 @@ app.get('/', async function ( req, res){
     res.statusCode = 200
     res.json(dishes)
 })
+
+
+//utilisateurs
+
+app.post("/utilisateurs/inscription", function(req, res){
+    //
+})
+
+app.post("/utilisateurs/connexion", function(req, res){
+    //
+})
+
 
 //start the server
 //==================================
