@@ -34,14 +34,24 @@ app.get('/', async function ( req, res){
     })
 
     res.statusCode = 200
-    res.json(dishes)
+    //res.json(dishes)
+    res.render('index', { dishes: dishes })
 })
 
 
 //utilisateurs
 
-app.post("/utilisateurs/inscription", function(req, res){
-    //
+app.post("/utilisateurs/inscription", async function(req, res){
+    /**
+     * $_POST equals to req.body {object}
+     * {string} const username = req.body.username 
+     * {string} const password = req.body.password
+     */ 
+    const { username, password } = req.body
+
+    // connect to database, verify if the user already exist
+
+
 })
 
 app.post("/utilisateurs/connexion", function(req, res){

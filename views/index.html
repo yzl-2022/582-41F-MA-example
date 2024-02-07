@@ -19,16 +19,16 @@
     <section id="connexion">
         <form action="/utilisateurs/connexion" method="POST">
             <h2>Se connecter</h2>
-            <input name="username" type="text" placeholder="username">
-            <input name="email" type="text" placeholder="username">
+            <input name="username" type="text" placeholder="username/email">
+            <input name="password" type="password" placeholder="password">
             <input type="submit" value="Se connecter">
         </form>
     </section>
     <section id="inscription">
         <form action="/utilisateurs/inscription" method="POST">
             <h2>S'inscrire</h2>
-            <input name="username" type="text" placeholder="username">
-            <input name="email" type="text" placeholder="username">
+            <input name="username" type="text" placeholder="username/email">
+            <input name="password" type="password" placeholder="password">
             <input type="submit" value="S'inscrire">
         </form>
     </section>
@@ -36,6 +36,12 @@
         <form action="/films" method="POST">
             <h2>Ajouter un nouveau film</h2>
         </form>
+    </section>
+    <section>
+        <h2>test la base de données</h2>
+        {{#dishes}}
+            {{name}} - 
+        {{/dishes}}
     </section>
 <script src="js/scripts.js"></script>
 </body>
