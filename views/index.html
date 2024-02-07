@@ -19,17 +19,19 @@
     <section id="connexion">
         <form action="/utilisateurs/connexion" method="POST">
             <h2>Se connecter</h2>
-            <input name="username" type="text" placeholder="username/email">
-            <input name="password" type="password" placeholder="password">
+            <input name="username" type="email" placeholder="username/email" required>
+            <input name="password" type="password" placeholder="password" required>
             <input type="submit" value="Se connecter">
+            <input type="reset" value="recommencer">
         </form>
     </section>
     <section id="inscription">
         <form action="/utilisateurs/inscription" method="POST">
             <h2>S'inscrire</h2>
-            <input name="username" type="text" placeholder="username/email">
-            <input name="password" type="password" placeholder="password">
+            <input name="username" type="email" placeholder="username/email" required>
+            <input name="password" type="password" placeholder="password" required>
             <input type="submit" value="S'inscrire">
+            <input type="reset" value="recommencer">
         </form>
     </section>
     <section>
@@ -42,6 +44,10 @@
         {{#dishes}}
             {{name}} - 
         {{/dishes}}
+        <h3>users</h3>
+        {{#users}}
+            {{username}} - 
+        {{/users}}
     </section>
 <script src="js/scripts.js"></script>
 </body>
