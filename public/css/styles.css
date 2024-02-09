@@ -11,3 +11,18 @@ nav ul li {
   display: inline-block;
   margin-right: 20px;
 }
+
+form.one {
+  display: flex;
+  flex-flow: column;
+  max-width: 300px;
+  border: 1px #999 solid;
+  border-radius: 6px;
+  margin-top: 16px;
+  padding: 16px;
+}
+
+form.one label {
+  display: block;
+  margin: 8px;
+}
