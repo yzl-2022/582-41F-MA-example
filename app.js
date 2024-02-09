@@ -157,7 +157,7 @@ app.post("/utilisateurs/connexion", //add middleware to validate request
 //==================================
 app.use(function(req, res){
     res.statusCode = 404
-    res.render('404', { url: req.url })
+    res.render('message', { url: req.url, message: '404' })
 })
 
 
