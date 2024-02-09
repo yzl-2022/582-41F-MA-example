@@ -11,7 +11,7 @@ app.set('view engine', 'html');
 app.engine('html', mustacheExpress());
 
 //get the database from db.js
-const db = require('./db')
+const db = require('./config/db')
 
 //Middlewares -- add before routers
 //==================================
@@ -47,6 +47,12 @@ app.get('/add', function(req, res){
 
 app.get('/login', function(req, res){
     res.render('login')
+})
+
+app.post('/login', function(req, res){
+    console.log(req.body)
+
+    res.json(req.body)
 })
 
 //start the server
