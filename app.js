@@ -18,14 +18,15 @@ const { check, validationResult } = require("express-validator");
 //Middlewares -- add before routers
 //==================================
 app.use(express.static('./public'))
-app.use(express.json()) //read json format data
+app.use(express.json()) //to read json format data in express
+app.use(express.urlencoded({ extended: true})); //to read request.body from post in express
 
 //Routers
 //==================================
 
 //films
 
-app.get('/', async function ( req, res){
+app.get(['/','/films','api/films'], async function ( req, res){
     const menuCol = db.collection('menu')
     const dishesRef = await menuCol.get()
 
@@ -57,7 +58,7 @@ app.get('/', async function ( req, res){
 
 //utilisateurs
 
-app.post("/utilisateurs/inscription", //add middleware to validate request
+app.post(['/utilisateurs/inscription','/api/utilisateurs/inscription'], //add middleware to validate request
         [
             check('username').escape().trim().notEmpty().isEmail().normalizeEmail(),
             check('password').escape().trim().notEmpty().isLength({min:8, max:20}).isStrongPassword({minLength:8, minLowercase:0, minNumbers:1, minUppercase:0, minSymbols:0})
@@ -105,7 +106,7 @@ app.post("/utilisateurs/inscription", //add middleware to validate request
         }
 )
 
-app.post("/utilisateurs/connexion", //add middleware to validate request
+app.post(['/utilisateurs/connexion','/api/utilisateurs/connexion'], //add middleware to validate request
         [
             check('username').escape().trim().notEmpty().isEmail().normalizeEmail(),
             check('password').escape().trim().notEmpty().isLength({min:8, max:20}).isStrongPassword({minLength:8, minLowercase:0, minNumbers:1, minUppercase:0, minSymbols:0})
