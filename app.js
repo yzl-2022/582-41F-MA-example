@@ -1,5 +1,4 @@
 const path = require('path')
-const fs = require('fs')
 
 //create an express server
 const express = require('express')
@@ -20,33 +19,97 @@ const { check, validationResult } = require("express-validator");
 
 //Middlewares -- add before routers
 //==================================
-app.use(express.static(path.join(__dirname, './public'))) // make available the folder /public
+app.use(express.static(path.join(__dirname, './public'))) //make available the folder /public
 app.use(express.json()) //to read json format data in express
-app.use(express.urlencoded({ extended: true })); //to read request.body from post in express
+app.use(express.urlencoded({extended: false})); //to read form data in express
 
 //Routers
 //==================================
 
 //films
 
-app.get(['/','/films','api/films'], async function ( req, res){
-    const filmsCol = db.collection('films')
-    const filmsRef = await filmsCol.get()
+//if there is no data inside collection `films`, implant local data into collection `films`
+app.get(['/films/initialiser','/api/films/initialiser'], async function(req, res){
+    try{
+        const donneesFilms = require(path.join(__dirname,'./data/filmsTest.js'))
 
-    if (filmsRef.empty) return res.status(404).send('data not found')
+        donneesFilms.forEach(async (item, index)=>{ 
+            item.id = index + 1
+            await db.collection('films').add(item)
+        })
 
-    const films = []
+        res.redirect('/films')
 
-    filmsRef.forEach((doc)=>{
-        films.push(doc.data())
-    })
-
-    
-    res.statusCode = 200
-    //res.json(dishes)
-    res.render('index', { films: films })
+    }catch(err){
+        console.log(err)
+        res.status(500).send(err)
+    }
 })
 
+app.get(['/','/films','/api/films'], async function(req, res){
+    try{
+        const filmsRef = await db.collection('films').get()
+
+        if (filmsRef.empty) return res.redirect('/films/initialiser') //implant local data if collection is empty
+
+        const films = []
+
+        filmsRef.forEach((doc)=>{
+            films.push(doc.data())  //only instrested in the .data() attribute
+        })
+        
+        res.statusCode = 200
+        res.render('index', { films: films })
+
+    }catch(err){
+        console.log(err)
+        res.status(500).send(err)
+    } 
+})
+
+/* app.post(['/','/films','/api/films'],
+        [
+            check('titre').escape().trim().notEmpty(),
+            check('genres').optional().escape().trim().notEmpty(),
+            check('description').optional().escape().trim().notEmpty(),
+            check('annee').escape().trim().notEmpty(),
+            check('realisation').escape().trim().notEmpty(),
+            check('titreVignette').escape().trim().notEmpty()
+        ],
+        async function(req,res){
+            //valider la requête
+            const validation = validationResult(req)
+            if (validation.errors.length > 0) {
+                res.statusCode = 400
+                //return res.json({message: "erreurs dans données envoyées"})
+                return res.render('message', { message: "Erreurs dans données envoyées" })
+            }
+        })
+*/
+
+//app.get()
+
+/* app.put(['/','/films','/api/films'],
+        [
+            check('titre').escape().trim().notEmpty(),
+            check('genres').optional().escape().trim().notEmpty(),
+            check('description').optional().escape().trim().notEmpty(),
+            check('annee').escape().trim().notEmpty(),
+            check('realisation').escape().trim().notEmpty(),
+            check('titreVignette').escape().trim().notEmpty()
+        ],
+        async function(req,res){
+            //valider la requête
+            const validation = validationResult(req)
+            if (validation.errors.length > 0) {
+                res.statusCode = 400
+                //return res.json({message: "erreurs dans données envoyées"})
+                return res.render('message', { message: "Erreurs dans données envoyées" })
+            }
+        })
+*/
+
+//app.delete()
 
 //utilisateurs
 
@@ -87,8 +150,11 @@ app.post(['/utilisateurs/inscription','/api/utilisateurs/inscription'], //add mi
                 }
 
                 //enregistre dans la base de données
-                const newUser = { username, password }
-                await db.collection('user').add(newUser) // will add a random document-ID
+                const userRef = await db.collection('user').count().get()
+                let id = userRef.data().count + 1                
+
+                const newUser = { username, password , "id": id }
+                await db.collection('user').add(newUser)
 
                 //si renvoie true
                 delete newUser.password    //effacer le mot de passe
@@ -96,7 +162,7 @@ app.post(['/utilisateurs/inscription','/api/utilisateurs/inscription'], //add mi
                 //res.json(newUser)
                 res.render('message', { message: `Bonjour ${newUser.username}, votre compte est créé avec succès.`})
 
-            } catch(err){
+            }catch(err){
                 console.log(err)
                 res.status(500).send(err)
             }
