@@ -21,40 +21,16 @@
     <header><h1>Film no trouvé.</h1></header>
     {{/film}}
     {{#film}}
-    <header><h1>Film: {{titre}}</h1></header>
+    <header><h1>{{titre}}</h1></header>
     <section>
-        <form action="/films/{{id}}" method="PUT">
-            <h2>Modifier le film</h2>
-            <label for="titre">Titre: <input name="titre" id="titre" type="text" value="{{titre}}"></label>
-            <label for="genres">Genres: 
-                <select name="genres" id="genres" multiple>
-                    <option value="Action">Action</option>
-                    <option value="Animation">Animation</option>
-                    <option value="Aventure">Aventure</option>
-                    <option value="Comédie">Comédie</option>
-                    <option value="Crime">Crime</option>
-                    <option value="Drame">Drame</option>
-                    <option value="Famille">Famille</option>
-                    <option value="Fantaisie">Fantaisie</option>
-                    <option value="Horreur">Horreur</option>
-                    <option value="Musical">Musical</option>
-                    <option value="Mystère">Mystère</option>
-                    <option value="Romance">Romance</option>
-                    <option value="Science-fiction">Science-fiction</option>
-                    <option value="Thriller">Thriller</option>
-                </select>
-            </label>
-            <label for="description">Description: <textarea name="description" id="description" cols="30" rows="10" value="{{description}}"></textarea></label>
-            <label for="annee">Année: <input type="number" name="annee" id="annee" value="annee"></label>
-            <label for="realisation">Réalisation: <input type="text" name="realisation" id="realisation" value="{{realisation}}"></label>
-            <label for="titreVignette">TitreVignette: <input type="text" name="titreVignette" id="titreVignette" value="{{titreVignette}}"></label>
-            <input type="submit" value="Modifier le Film">
-        </form>
-    </section>
-    <section>
-        <form action="/films/{{id}}" method="DELETE">
-            <input type="submit" value="Supprimer le Film">
-        </form>
+        <table>
+            <tr><td>Titre</td><td>{{titre}}</td></tr>
+            <tr><td>Genres</td><td>{{#genres}}{{.}} - {{/genres}}</td></tr>
+            <tr><td>Description</td><td>{{description}}</td></tr>
+            <tr><td>Année</td><td>{{annee}}</td></tr>
+            <tr><td>Réalisation</td><td>{{realisation}}</td></tr>
+            <tr><td>TitreVignette</td><td>{{titreVignette}}</td></tr>
+        </table>
     </section>
     {{/film}}
 </body>

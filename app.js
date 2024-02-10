@@ -1,5 +1,8 @@
 const path = require('path')
 
+//to read the parameters in .env
+require('dotenv').config()
+
 //create an express server
 const express = require('express')
 const app = express()
@@ -12,7 +15,7 @@ app.set('view engine', 'html')
 app.engine('html', mustacheExpress())
 
 //get the database from db.js
-const db = require(path.join(__dirname, './db'))
+const db = require(path.join(__dirname, './config/db'))
 
 //validation de données
 const { check, validationResult } = require("express-validator");
@@ -48,7 +51,7 @@ app.get(['/films/initialiser','/api/films/initialiser'], async function(req, res
 
 app.get(['/','/films','/api/films'], async function(req, res){
     try{
-        const filmsRef = await db.collection('films').get()
+        const filmsRef = await db.collection('films').orderBy('id').get()
 
         if (filmsRef.empty) return res.redirect('/films/initialiser') //implant local data if collection is empty
 
@@ -67,7 +70,7 @@ app.get(['/','/films','/api/films'], async function(req, res){
     } 
 })
 
-/* app.post(['/','/films','/api/films'],
+app.post(['/','/films','/api/films'],
         [
             check('titre').escape().trim().notEmpty(),
             check('genres').optional().escape().trim().notEmpty(),
@@ -85,9 +88,36 @@ app.get(['/','/films','/api/films'], async function(req, res){
                 return res.render('message', { message: "Erreurs dans données envoyées" })
             }
         })
-*/
 
-//app.get()
+app.get(['/films/:id','/api/films/:id'], async function(req, res){
+    try{
+        const id = parseInt(req.params.id)
+
+        //vérifie le `id` dans la base de données
+        const docRef = await db.collection('films').where('id', '==', id).get()
+        const filmExist = []
+
+        docRef.forEach( (doc) => {
+            filmExist.push(doc.data())
+        })
+
+        //si film n'existe pas
+        if(filmExist.length < 1){
+            res.statusCode = 400      //invalid request
+            //return res.json({message: "film non trouvé"})
+            return res.render('message', { message: "Film non trouvé" })
+        }
+
+        //si fim existe
+        const filmTrouve = filmExist[0]
+        res.statusCode = 200
+        res.render('film', { film : filmTrouve })
+
+    }catch(err){
+        console.log(err)
+        res.status(500).send(err)
+    }
+})
 
 /* app.put(['/','/films','/api/films'],
         [
