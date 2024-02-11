@@ -37,8 +37,8 @@ app.get(['/films/initialiser','/api/films/initialiser'], async function(req, res
         const donneesFilms = require(path.join(__dirname,'./data/filmsTest.js'))
 
         donneesFilms.forEach(async (item, index)=>{ 
-            item.id = index + 1
-            await db.collection('films').add(item)
+            item.id = (index + 1).toString()
+            await db.collection('films').doc(item.id).set(item)
         })
 
         res.redirect('/films')
@@ -53,7 +53,7 @@ app.get(['/','/films','/api/films'], async function(req, res){
     try{
         const filmsRef = await db.collection('films').orderBy('id').get()
 
-        if (filmsRef.empty) return res.redirect('/films/initialiser') //implant local data if collection is empty
+        if (filmsRef.empty) return res.redirect('/films/initialiser') //use `empty` for collection(), use `exists` for doc(id)
 
         const films = []
 
@@ -78,7 +78,7 @@ app.post(['/','/films','/api/films'],
             check('description').escape().trim().notEmpty(),
             check('annee').escape().trim().notEmpty().isInt({ min: 1888, max: 2024 }),
             check('realisation').escape().trim().notEmpty(),
-            check('titreVignette').escape().trim().notEmpty()
+            check('titreVignette').optional().escape().trim().notEmpty()
         ],
         async function(req,res){
             try{
@@ -99,7 +99,7 @@ app.post(['/','/films','/api/films'],
                  * {string} const realisation = req.body.realisation
                  * {string} const titreVignette = req.body.titreVignette
                  */
-                const { titre, genres, description, annee, realisation, titreVignette} = req.body
+                const { titre, genres, description, annee, realisation, titreVignette } = req.body
 
                 //vérifie le titre dans la base de données
                 const docRef = await db.collection('films').where('titre', '==', titre).get()
@@ -117,10 +117,11 @@ app.post(['/','/films','/api/films'],
 
                 //enregistre dans la base de données
                 const filmsRef = await db.collection('films').count().get()
-                let id = filmsRef.data().count + 1                
+                let id = ( filmsRef.data().count + 1 ).toString()                
 
-                const newFilm = { titre, genres, description, annee, realisation, titreVignette , "id": id }
-                await db.collection('films').add(newFilm)
+                const newFilm = { titre, genres, description, annee, realisation, titreVignette, "id":id }
+
+                await db.collection('films').doc(id).set(newFilm)
 
                 //si renvoie true
                 res.statusCode = 200
@@ -135,25 +136,20 @@ app.post(['/','/films','/api/films'],
 
 app.get(['/films/:id','/api/films/:id'], async function(req, res){
     try{
-        const id = parseInt(req.params.id)
+        const id = req.params.id
 
         //vérifie le `id` dans la base de données
-        const docRef = await db.collection('films').where('id', '==', id).get()
-        const filmExist = []
-
-        docRef.forEach( (doc) => {
-            filmExist.push(doc.data())
-        })
+        const docRef = await db.collection('films').doc(id).get()
 
         //si film n'existe pas
-        if(filmExist.length < 1){
+        if(!docRef.exists){
             res.statusCode = 400      //invalid request
             //return res.json({message: "film non trouvé"})
             return res.render('message', { message: "Film non trouvé" })
         }
 
         //si fim existe
-        const filmTrouve = filmExist[0]
+        const filmTrouve = docRef.data()
         res.statusCode = 200
         //res.json(filmTrouve)
         res.render('film', { film : filmTrouve })
@@ -164,16 +160,28 @@ app.get(['/films/:id','/api/films/:id'], async function(req, res){
     }
 })
 
-/* app.put(['/','/films','/api/films'],
+app.put(['/films/:id','/api/films/:id'],
         [
             check('titre').escape().trim().notEmpty(),
-            check('genres').optional().escape().trim().notEmpty(),
-            check('description').optional().escape().trim().notEmpty(),
-            check('annee').escape().trim().notEmpty(),
+            check('genres').escape().trim().notEmpty().isArray(),
+            check('description').escape().trim().notEmpty(),
+            check('annee').escape().trim().notEmpty().isInt({ min: 1888, max: 2024 }),
             check('realisation').escape().trim().notEmpty(),
-            check('titreVignette').escape().trim().notEmpty()
+            check('titreVignette').optional().escape().trim().notEmpty()
         ],
         async function(req,res){
+            const id = req.params.id
+
+            //vérifie le `id` dans la base de données
+            const docRef = await db.collection('films').doc(id).get()
+
+            //si id n'existe pas
+            if(!docRef.exists){
+                res.statusCode = 400      //invalid request
+                return res.json({ message: "Film non trouvé pour modifier" })
+            }
+
+            //si id existe
             //valider la requête
             const validation = validationResult(req)
             if (validation.errors.length > 0) {
@@ -181,10 +189,35 @@ app.get(['/films/:id','/api/films/:id'], async function(req, res){
                 //return res.json({message: "erreurs dans données envoyées"})
                 return res.render('message', { message: "Erreurs dans données envoyées" })
             }
-        })
-*/
 
-//app.delete()
+            const donneesModifiees = req.body;
+            await db.collection('films').doc(id).update(donneesModifiees);
+            
+            res.statusCode = 200;
+            res.json({ message: `Le film ${id} a été modifié` });
+        })
+
+app.delete(['/films/:id','/api/films/:id'], async function(req, res){
+    try{
+        const id = req.params.id
+
+        //vérifie le `id` dans la base de données
+        const docRef = await db.collection('films').doc(id).get()
+
+        if(docRef.exists){
+            await db.collection('films').doc(id).delete()
+            res.statusCode = 200
+            return res.json({message: `Le film ${id} a été supprimé`})
+        }else{
+            res.statusCode = 400      //invalid request
+            return res.json({message: "film n'existe pas pour supprimer"})
+        }
+
+    }catch(err){
+        console.log(err)
+        res.status(500).send(err)
+    }
+})
 
 //utilisateurs
 
@@ -226,10 +259,10 @@ app.post(['/utilisateurs/inscription','/api/utilisateurs/inscription'], //add mi
 
                 //enregistre dans la base de données
                 const userRef = await db.collection('user').count().get()
-                let id = userRef.data().count + 1                
+                let id = ( userRef.data().count + 1 ).toString()            
 
-                const newUser = { username, password , "id": id }
-                await db.collection('user').add(newUser)
+                const newUser = { username, password , "id":id }
+                await db.collection('user').doc(id).set(newUser)
 
                 //si renvoie true
                 delete newUser.password    //effacer le mot de passe
