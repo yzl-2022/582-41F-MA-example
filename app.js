@@ -62,6 +62,7 @@ app.get(['/','/films','/api/films'], async function(req, res){
         })
         
         res.statusCode = 200
+        //res.json(films)
         res.render('index', { films: films })
 
     }catch(err){
@@ -73,20 +74,63 @@ app.get(['/','/films','/api/films'], async function(req, res){
 app.post(['/','/films','/api/films'],
         [
             check('titre').escape().trim().notEmpty(),
-            check('genres').optional().escape().trim().notEmpty(),
-            check('description').optional().escape().trim().notEmpty(),
-            check('annee').escape().trim().notEmpty(),
+            check('genres').escape().trim().notEmpty().isArray(),
+            check('description').escape().trim().notEmpty(),
+            check('annee').escape().trim().notEmpty().isInt({ min: 1888, max: 2024 }),
             check('realisation').escape().trim().notEmpty(),
             check('titreVignette').escape().trim().notEmpty()
         ],
         async function(req,res){
-            //valider la requête
-            const validation = validationResult(req)
-            if (validation.errors.length > 0) {
-                res.statusCode = 400
-                //return res.json({message: "erreurs dans données envoyées"})
-                return res.render('message', { message: "Erreurs dans données envoyées" })
-            }
+            try{
+                //valider la requête
+                const validation = validationResult(req)
+                if (validation.errors.length > 0) {
+                    res.statusCode = 400
+                    //return res.json({message: "erreurs dans données envoyées"})
+                    return res.render('message', { message: "Erreurs dans données envoyées" })
+                }
+
+                /** récupérer les valeurs envoyés par la methode POST
+                 * $_POST equals to req.body {object}
+                 * {string} const titre = req.body.titre 
+                 * {array}  const genres = req.body.genres
+                 * {string} const description = req.body.description
+                 * {string} const annee = req.body.annee (first film in year 1888)
+                 * {string} const realisation = req.body.realisation
+                 * {string} const titreVignette = req.body.titreVignette
+                 */
+                const { titre, genres, description, annee, realisation, titreVignette} = req.body
+
+                //vérifie le titre dans la base de données
+                const docRef = await db.collection('films').where('titre', '==', titre).get()
+                const filmExist = []
+
+                docRef.forEach( (doc) => {
+                    filmExist.push(doc.data())
+                })
+
+                if(filmExist.length > 0){
+                    res.statusCode = 400      //invalid request
+                    //return res.json({message: "film déjà existe"})
+                    return res.render('message', { message: "Film déjà existe" })
+                }
+
+                //enregistre dans la base de données
+                const filmsRef = await db.collection('films').count().get()
+                let id = filmsRef.data().count + 1                
+
+                const newFilm = { titre, genres, description, annee, realisation, titreVignette , "id": id }
+                await db.collection('films').add(newFilm)
+
+                //si renvoie true
+                res.statusCode = 200
+                //res.json(newFilm)
+                res.render('message', { message: `Film « ${newFilm.titre} » est ajouté avec succès.`})
+
+            }catch(err){
+                console.log(err)
+                res.status(500).send(err)
+            } 
         })
 
 app.get(['/films/:id','/api/films/:id'], async function(req, res){
@@ -111,6 +155,7 @@ app.get(['/films/:id','/api/films/:id'], async function(req, res){
         //si fim existe
         const filmTrouve = filmExist[0]
         res.statusCode = 200
+        //res.json(filmTrouve)
         res.render('film', { film : filmTrouve })
 
     }catch(err){
