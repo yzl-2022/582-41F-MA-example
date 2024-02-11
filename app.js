@@ -18,13 +18,13 @@ app.engine('html', mustacheExpress())
 const db = require(path.join(__dirname, './config/db'))
 
 //validation de données
-const { check, validationResult } = require("express-validator");
+const { check, validationResult } = require("express-validator")
 
 //Middlewares -- add before routers
 //==================================
 app.use(express.static(path.join(__dirname, './public'))) //make available the folder /public
 app.use(express.json()) //to read json format data in express
-app.use(express.urlencoded({extended: false})); //to read form data in express
+app.use(express.urlencoded({extended: false})) //to read form data in express
 
 //Routers
 //==================================
@@ -37,8 +37,8 @@ app.get(['/films/initialiser','/api/films/initialiser'], async function(req, res
         const donneesFilms = require(path.join(__dirname,'./data/filmsTest.js'))
 
         donneesFilms.forEach(async (item, index)=>{ 
-            item.id = (index + 1).toString()
-            await db.collection('films').doc(item.id).set(item)
+            item.id = index + 1
+            await db.collection('films').doc(item.id.toString()).set(item)
         })
 
         res.redirect('/films')
@@ -51,14 +51,14 @@ app.get(['/films/initialiser','/api/films/initialiser'], async function(req, res
 
 app.get(['/','/films','/api/films'], async function(req, res){
     try{
-        const filmsRef = await db.collection('films').orderBy('id').get()
+        const filmsRef = await db.collection('films').orderBy('id').get() //orderBy('id') works only when id is stored as Integer(not String)
 
         if (filmsRef.empty) return res.redirect('/films/initialiser') //use `empty` for collection(), use `exists` for doc(id)
 
         const films = []
 
         filmsRef.forEach((doc)=>{
-            films.push(doc.data())  //only instrested in the .data() attribute
+            films.push(doc.data())
         })
         
         res.statusCode = 200
@@ -116,12 +116,13 @@ app.post(['/','/films','/api/films'],
                 }
 
                 //enregistre dans la base de données
-                const filmsRef = await db.collection('films').count().get()
-                let id = ( filmsRef.data().count + 1 ).toString()                
+                const filmsRef = await db.collection('films').orderBy('id','desc').limit(1).get()
+                let id = 1  
+                if (!filmsRef.empty) id = filmsRef.docs[0].data().id + 1               
 
                 const newFilm = { titre, genres, description, annee, realisation, titreVignette, "id":id }
 
-                await db.collection('films').doc(id).set(newFilm)
+                await db.collection('films').doc(id.toString()).set(newFilm)
 
                 //si renvoie true
                 res.statusCode = 200
@@ -167,34 +168,40 @@ app.put(['/films/:id','/api/films/:id'],
             check('description').escape().trim().notEmpty(),
             check('annee').escape().trim().notEmpty().isInt({ min: 1888, max: 2024 }),
             check('realisation').escape().trim().notEmpty(),
-            check('titreVignette').optional().escape().trim().notEmpty()
+            check('titreVignette').optional().escape().trim().notEmpty(),
+            check('id').optional().escape().trim().notEmpty().isInt({ min: 1 })
         ],
         async function(req,res){
-            const id = req.params.id
+            try{
+                const id = req.params.id
 
-            //vérifie le `id` dans la base de données
-            const docRef = await db.collection('films').doc(id).get()
+                //vérifie le `id` dans la base de données
+                const docRef = await db.collection('films').doc(id).get()
 
-            //si id n'existe pas
-            if(!docRef.exists){
-                res.statusCode = 400      //invalid request
-                return res.json({ message: "Film non trouvé pour modifier" })
-            }
+                //si id n'existe pas
+                if(!docRef.exists){
+                    res.statusCode = 400      //invalid request
+                    return res.json({ message: "Film non trouvé pour modifier" })
+                }
 
-            //si id existe
-            //valider la requête
-            const validation = validationResult(req)
-            if (validation.errors.length > 0) {
-                res.statusCode = 400
-                //return res.json({message: "erreurs dans données envoyées"})
-                return res.render('message', { message: "Erreurs dans données envoyées" })
-            }
+                //si id existe
+                //valider la requête
+                const validation = validationResult(req)
+                if (validation.errors.length > 0) {
+                    res.statusCode = 400
+                    return res.json({message: "erreurs dans données envoyées"})
+                }
 
-            const donneesModifiees = req.body;
-            await db.collection('films').doc(id).update(donneesModifiees);
-            
-            res.statusCode = 200;
-            res.json({ message: `Le film ${id} a été modifié` });
+                const donneesModifiees = req.body
+                await db.collection('films').doc(id).update(donneesModifiees)
+                
+                res.statusCode = 200
+                res.json({ message: `Le film ${id} a été modifié` })
+
+            }catch(err){
+                console.log(err)
+                res.status(500).send(err)
+            }  
         })
 
 app.delete(['/films/:id','/api/films/:id'], async function(req, res){
@@ -258,11 +265,12 @@ app.post(['/utilisateurs/inscription','/api/utilisateurs/inscription'], //add mi
                 }
 
                 //enregistre dans la base de données
-                const userRef = await db.collection('user').count().get()
-                let id = ( userRef.data().count + 1 ).toString()            
+                const userRef = await db.collection('user').orderBy('id','desc').limit(1).get()
+                let id = 1           
+                if (!userRef.empty) id = userRef.doc[0].data().id + 1
 
                 const newUser = { username, password , "id":id }
-                await db.collection('user').doc(id).set(newUser)
+                await db.collection('user').doc(id.toString()).set(newUser)
 
                 //si renvoie true
                 delete newUser.password    //effacer le mot de passe
